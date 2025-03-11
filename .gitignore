@@ -1,0 +1,45 @@
+# Binaries and build artifacts
+*.exe
+*.out
+*.a
+*.so
+*.dll
+*.dylib
+
+# Compiled object files
+*.o
+*.obj
+
+# Go modules and dependencies
+/go/
+vendor/
+bin/
+pkg/
+
+# Secrets and environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+*.log.*
+logs/
+
+# VSCode
+.vscode/
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*.bak
+
+# Cache files
+__pycache__/
+.DS_Store
+Thumbs.db
+
+
+#Air
+tmp/
