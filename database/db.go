@@ -16,9 +16,19 @@ var (
 	clientOnce sync.Once
 )
 
-func ConnectDB() *mongo.Client {
-	clientOnce.Do(func() {
+var User *mongo.Collection
 
+func InitDB() *mongo.Database {
+	connectDB()
+	DBname := os.Getenv("DATABASE_NAME")
+	if DBname == "" {
+		log.Fatal("No DATBASE_NAME found in env.")
+	}
+	return DBClient.Database(DBname)
+}
+
+func connectDB() *mongo.Client {
+	clientOnce.Do(func() {
 		uri := os.Getenv("CONNECTION_STRING")
 		if uri == "" {
 			log.Fatal("Set your 'CONNECTION_STRING' environment variable. ")

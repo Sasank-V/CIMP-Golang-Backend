@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/Sasank-V/CIMP-Golang-Backend/routes"
-	"github.com/Sasank-V/CIMP-Golang-Backend/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -16,10 +15,12 @@ func main() {
 		log.Fatal("Error while loading env: ", err)
 	}
 	fmt.Printf("ENV Loaded\n")
-	utils.InitDB()
 
+	authApi := r.Group("/api/auth")
 	userApi := r.Group("/api/user")
+
 	routes.SetupUserRoutes(userApi)
+	routes.SetupAuthRoutes(authApi)
 
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal("Failed to start the server", err)

@@ -3,8 +3,7 @@ package utils
 import (
 	"context"
 	"fmt"
-	"log"
-	"os"
+	"sync"
 	"time"
 
 	"github.com/Sasank-V/CIMP-Golang-Backend/database"
@@ -12,20 +11,18 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-var DBClient *mongo.Client
 var User *mongo.Collection
+var userConnect sync.Once
 
-func InitDB() {
-	DBClient = database.ConnectDB()
-	DBname := os.Getenv("DATABASE_NAME")
-	if DBname == "" {
-		log.Fatal("No DATBASE_NAME found in env.")
-	}
-	User = DBClient.Database(DBname).Collection("users")
+func connectUserCollection() {
+	userConnect.Do(func() {
+		db := database.InitDB()
+		User = db.Collection("users")
+	})
 }
 
 func GetUserByID(id string) (bson.M, error) {
-
+	connectUserCollection()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
