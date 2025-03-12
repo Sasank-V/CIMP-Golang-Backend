@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -25,6 +26,10 @@ func InitDB() *mongo.Database {
 		log.Fatal("No DATBASE_NAME found in env.")
 	}
 	return DBClient.Database(DBname)
+}
+
+func GetContext() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), 5*time.Second)
 }
 
 func connectDB() *mongo.Client {

@@ -1,10 +1,11 @@
 package schemas
 
 import (
-	"context"
 	"log"
-	"time"
 
+	"slices"
+
+	"github.com/Sasank-V/CIMP-Golang-Backend/database"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -23,7 +24,7 @@ type User struct {
 	Contributions []string `bson:"contributions,omitempty" json:"contributions,omitempty"`
 }
 
-func SetDefaults(user *User) {
+func SetUserDefaults(user *User) {
 	if user.Departments == nil {
 		user.Departments = []string{}
 	}
@@ -35,13 +36,13 @@ func SetDefaults(user *User) {
 	}
 }
 
-func setUniqueKeys(coll *mongo.Collection) {
+func setUserUniqueKeys(coll *mongo.Collection) {
 	indexModel := mongo.IndexModel{
 		Keys:    bson.D{{"id", 1}},
 		Options: options.Index().SetUnique(true),
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := database.GetContext()
 	defer cancel()
 
 	_, err := coll.Indexes().CreateOne(ctx, indexModel)
@@ -51,6 +52,19 @@ func setUniqueKeys(coll *mongo.Collection) {
 }
 
 func CreateUserCollection(db *mongo.Database) {
+	ctx, cancel := database.GetContext()
+	defer cancel()
+
+	collections, err := db.ListCollectionNames(ctx, bson.M{})
+	if err != nil {
+		log.Fatal("Error getting the Collection Names: ", err)
+		return
+	}
+	if slices.Contains(collections, "users") {
+		log.Printf("User Collection already exist , skipping creation")
+		return
+	}
+
 	jsonSchema := bson.M{
 		"bsonType": "object",
 		"required": []string{"id", "reg_number", "first_name", "last_name", "email", "password", "is_lead"},
@@ -102,15 +116,11 @@ func CreateUserCollection(db *mongo.Database) {
 	}
 
 	opts := options.CreateCollection().SetValidator(validator)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	err := db.CreateCollection(ctx, "users", opts)
+	err = db.CreateCollection(ctx, "users", opts)
 	if err != nil {
-		log.Fatal("Failed to Create User Collection: %v\n", err)
+		log.Fatal("Failed to Create User Collection: ", err)
 		return
 	}
 
-	setUniqueKeys(db.Collection("users"))
+	setUserUniqueKeys(db.Collection("users"))
 }
