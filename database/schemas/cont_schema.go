@@ -2,7 +2,6 @@ package schemas
 
 import (
 	"log"
-	"slices"
 	"time"
 
 	"github.com/Sasank-V/CIMP-Golang-Backend/database"
@@ -36,42 +35,17 @@ type Contribution struct {
 	CreatedAt   time.Time `bson:"created_at" json:"created_at"`
 }
 
-func SetContributonDefaults(cont *Contribution) {
-	if cont.ProofFiles == nil {
-		cont.ProofFiles = []string{}
-	}
-	if cont.SecTargets == nil {
-		cont.SecTargets = []string{}
-	}
-	cont.CreatedAt = time.Now().UTC()
-}
-
-func setContributionUniqueKeys(coll *mongo.Collection) {
-	indexModel := mongo.IndexModel{
-		Keys:    bson.D{{"id", 1}},
-		Options: options.Index().SetUnique(true),
-	}
-
+func CreateContributionCollection(db *mongo.Database) {
 	ctx, cancel := database.GetContext()
 	defer cancel()
 
-	_, err := coll.Indexes().CreateOne(ctx, indexModel)
+	exist, err := database.CollectionExists(db, lib.ContributionCollName)
 	if err != nil {
-		log.Fatal("Error while setting up unique key: ", err)
-	}
-}
-
-func ConnectContributionCollection(db *mongo.Database) {
-	ctx, cancel := database.GetContext()
-	defer cancel()
-
-	collections, err := db.ListCollectionNames(ctx, bson.M{})
-	if err != nil {
-		log.Fatal("Error getting Collections: ", err)
+		log.Fatal("Error checking the existing collection: ", err)
 		return
 	}
-	if slices.Contains(collections, lib.ContributionCollName) {
-		log.Printf("Contribution Collection already exists, Skipping Creation...\n")
+	if exist {
+		log.Printf("Contribution Collection Already Exist , Skipping Creation...\n")
 		return
 	}
 	jsonSchema := bson.M{
@@ -137,6 +111,7 @@ func ConnectContributionCollection(db *mongo.Database) {
 		log.Fatal("Error creating Contribution Collection: ", err)
 		return
 	}
-	setContributionUniqueKeys(db.Collection(lib.ContributionCollName))
-
+	if err = database.SetUniqueKeys(db.Collection(lib.ContributionCollName), []string{"id"}); err != nil {
+		log.Fatal("Error setting up Contrubution Unique Keys: ", err)
+	}
 }

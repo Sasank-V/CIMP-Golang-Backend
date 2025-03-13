@@ -44,11 +44,15 @@ func getUserRequests(c *gin.Context) {
 	user, err := controllers.GetUserByID(userID)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			c.JSON(http.StatusNotFound, types.AuthResponse{
-				Message: "No User found with the given ID",
+			c.JSON(http.StatusNotFound, types.GetUserRequestsResponse{
+				Message:  "No User found with the given ID",
+				Requests: []schemas.Contribution{},
 			})
 		}
 	}
+	c.JSON(http.StatusOK, types.GetUserRequestsResponse{
+		Message: "User request fetched successfully",
+	})
 }
 
 func getUserContributionData(c *gin.Context) {

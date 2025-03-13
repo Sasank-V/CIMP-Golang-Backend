@@ -3,9 +3,8 @@ package schemas
 import (
 	"log"
 
-	"slices"
-
 	"github.com/Sasank-V/CIMP-Golang-Backend/database"
+	"github.com/Sasank-V/CIMP-Golang-Backend/lib"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -24,44 +23,17 @@ type User struct {
 	Contributions []string `bson:"contributions,omitempty" json:"contributions,omitempty"`
 }
 
-func SetUserDefaults(user *User) {
-	if user.Departments == nil {
-		user.Departments = []string{}
-	}
-	if user.Clubs == nil {
-		user.Departments = []string{}
-	}
-	if user.Contributions == nil {
-		user.Contributions = []string{}
-	}
-}
-
-func setUserUniqueKeys(coll *mongo.Collection) {
-	indexModel := mongo.IndexModel{
-		Keys:    bson.D{{"id", 1}},
-		Options: options.Index().SetUnique(true),
-	}
-
-	ctx, cancel := database.GetContext()
-	defer cancel()
-
-	_, err := coll.Indexes().CreateOne(ctx, indexModel)
-	if err != nil {
-		log.Fatal("Error while setting up unique key: ", err)
-	}
-}
-
 func CreateUserCollection(db *mongo.Database) {
 	ctx, cancel := database.GetContext()
 	defer cancel()
 
-	collections, err := db.ListCollectionNames(ctx, bson.M{})
+	exist, err := database.CollectionExists(db, lib.UserCollName)
 	if err != nil {
-		log.Fatal("Error getting the Collection Names: ", err)
+		log.Fatal("Error checking the existing collection: ", err)
 		return
 	}
-	if slices.Contains(collections, "users") {
-		log.Printf("User Collection already exist , skipping creation")
+	if exist {
+		log.Printf("User Collection Already Exist , Skipping Creation...\n")
 		return
 	}
 
@@ -116,11 +88,13 @@ func CreateUserCollection(db *mongo.Database) {
 	}
 
 	opts := options.CreateCollection().SetValidator(validator)
-	err = db.CreateCollection(ctx, "users", opts)
+	err = db.CreateCollection(ctx, lib.UserCollName, opts)
 	if err != nil {
 		log.Fatal("Failed to Create User Collection: ", err)
 		return
 	}
 
-	setUserUniqueKeys(db.Collection("users"))
+	if err := database.SetUniqueKeys(db.Collection(lib.UserCollName), []string{"id"}); err != nil {
+		log.Fatal("Error setting up User Unique Keys: ", err)
+	}
 }

@@ -5,9 +5,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"sync"
 	"time"
 
+	"github.com/Sasank-V/CIMP-Golang-Backend/lib"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -28,8 +32,39 @@ func InitDB() *mongo.Database {
 	return DBClient.Database(DBname)
 }
 
+func SetUniqueKeys(coll *mongo.Collection, uniqueFields []string) error {
+	ctx, cancel := GetContext()
+	defer cancel()
+
+	for _, field := range uniqueFields {
+		indexModel := mongo.IndexModel{
+			Keys:    bson.D{field, 1},
+			Options: options.Index().SetUnique(true),
+		}
+		_, err := coll.Indexes().CreateOne(ctx, indexModel)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func GetContext() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), 5*time.Second)
+}
+
+func CollectionExists(db *mongo.Database, collName string) (bool, error) {
+	ctx, cancel := GetContext()
+	defer cancel()
+
+	collections, err := db.ListCollectionNames(ctx, bson.M{})
+	if err != nil {
+		return false, err
+	}
+	if slices.Contains(collections, lib.ContributionCollName) {
+		return true, nil
+	}
+	return false, nil
 }
 
 func connectDB() *mongo.Client {
