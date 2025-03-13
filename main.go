@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Sasank-V/CIMP-Golang-Backend/controllers"
 	"github.com/Sasank-V/CIMP-Golang-Backend/routes"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -15,6 +16,11 @@ func main() {
 		log.Fatal("Error while loading env: ", err)
 	}
 	fmt.Printf("ENV Loaded\n")
+
+	controllers.ConnectClubCollection()
+	controllers.ConnectDepartmentCollection()
+	controllers.ConnectContributionCollection()
+	controllers.ConnectUserCollection()
 
 	authApi := r.Group("/api/auth")
 	userApi := r.Group("/api/user")

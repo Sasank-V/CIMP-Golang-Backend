@@ -8,6 +8,6 @@ type GetUserResponse struct {
 }
 
 type GetUserRequestsResponse struct {
-	Message  string                 `json:"message"`
-	Requests []schemas.Contribution `json:"requests"`
+	Message       string             `json:"message"`
+	Contributions []FullContribution `json:"requests"`
 }

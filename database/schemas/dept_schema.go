@@ -1,7 +1,6 @@
 package schemas
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/Sasank-V/CIMP-Golang-Backend/database"
@@ -27,7 +26,7 @@ func CreateDepartmentCollection(db *mongo.Database) {
 		return
 	}
 	if exist {
-		fmt.Printf("Department Collection Already Exist , Skipping Creation...\n")
+		log.Printf("Department Collection Already Exist , Skipping Creation...\n")
 		return
 	}
 

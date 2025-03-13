@@ -47,7 +47,6 @@ func signupHandler(c *gin.Context) {
 		RegNumber: strings.ToUpper(user.RegNumber),
 		IsLead:    false,
 	}
-	schemas.SetUserDefaults(&new_user)
 	if err := controllers.AddUser(new_user); err != nil {
 		fmt.Printf("Error adding user: %v\n", err)
 		c.JSON(http.StatusInternalServerError, types.AuthResponse{

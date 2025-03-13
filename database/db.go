@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/Sasank-V/CIMP-Golang-Backend/lib"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -32,13 +31,33 @@ func InitDB() *mongo.Database {
 	return DBClient.Database(DBname)
 }
 
+func connectDB() *mongo.Client {
+	clientOnce.Do(func() {
+		uri := os.Getenv("CONNECTION_STRING")
+		if uri == "" {
+			log.Fatal("Set your 'CONNECTION_STRING' environment variable. ")
+		}
+		dbClient, err := mongo.Connect(options.Client().
+			ApplyURI(uri))
+		if err != nil {
+			log.Fatal("[MONGO-DB] Failed to connect to MongoDB: ", err)
+		}
+		if err := dbClient.Ping(context.TODO(), nil); err != nil {
+			log.Fatal("[MONGO-DB] MongoDB connection test failed: ", err)
+		}
+		fmt.Printf("[MONGO-DB] MongoDB Connected\n")
+		DBClient = dbClient
+	})
+	return DBClient
+}
+
 func SetUniqueKeys(coll *mongo.Collection, uniqueFields []string) error {
 	ctx, cancel := GetContext()
 	defer cancel()
 
 	for _, field := range uniqueFields {
 		indexModel := mongo.IndexModel{
-			Keys:    bson.D{field, 1},
+			Keys:    bson.D{{field, 1}},
 			Options: options.Index().SetUnique(true),
 		}
 		_, err := coll.Indexes().CreateOne(ctx, indexModel)
@@ -65,24 +84,4 @@ func CollectionExists(db *mongo.Database, collName string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
-}
-
-func connectDB() *mongo.Client {
-	clientOnce.Do(func() {
-		uri := os.Getenv("CONNECTION_STRING")
-		if uri == "" {
-			log.Fatal("Set your 'CONNECTION_STRING' environment variable. ")
-		}
-		dbClient, err := mongo.Connect(options.Client().
-			ApplyURI(uri))
-		if err != nil {
-			log.Fatal("[MONGO-DB] Failed to connect to MongoDB: ", err)
-		}
-		if err := dbClient.Ping(context.TODO(), nil); err != nil {
-			log.Fatal("[MONGO-DB] MongoDB connection test failed: ", err)
-		}
-		fmt.Printf("[MONGO-DB] MongoDB Connected\n")
-		DBClient = dbClient
-	})
-	return DBClient
 }

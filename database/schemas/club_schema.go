@@ -13,7 +13,7 @@ import (
 type Club struct {
 	ID          string   `bson:"id" json:"id" `
 	Name        string   `bson:"name" json:"name"`
-	Leads       string   `bson:"leads" json:"leads"`
+	Leads       []string `bson:"leads" json:"leads"`
 	Departments []string `bson:"departments,omitempty" json:"departments,omitempty"`
 }
 
