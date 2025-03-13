@@ -7,7 +7,12 @@ type GetUserResponse struct {
 	User    schemas.User `json:"user,omitempty"`
 }
 
-type GetUserRequestsResponse struct {
+type GetUserContributionsResponse struct {
 	Message       string             `json:"message"`
-	Contributions []FullContribution `json:"requests"`
+	Contributions []FullContribution `json:"contributions"`
+}
+
+type GetLeadUserRequestsResponse struct {
+	Message  string             `json:"message"`
+	Requests []FullContribution `json:"requests"`
 }

@@ -16,7 +16,7 @@ import (
 func SetupUserRoutes(r *gin.RouterGroup) {
 	r.GET("/info/:id", getUserInfo)
 	r.GET("/contributions/:id", getUserContributions)
-	r.GET("/get-contribution-data/:id", getUserContributionData)
+	r.GET("/requests/:id", getLeadUserRequests)
 }
 
 func getUserInfo(c *gin.Context) {
@@ -47,7 +47,7 @@ func getUserContributions(c *gin.Context) {
 	user, err := controllers.GetUserByID(userID)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			c.JSON(http.StatusNotFound, types.GetUserRequestsResponse{
+			c.JSON(http.StatusNotFound, types.GetUserContributionsResponse{
 				Message:       "No User found with the given ID",
 				Contributions: []types.FullContribution{},
 			})
@@ -84,19 +84,44 @@ func getUserContributions(c *gin.Context) {
 
 	if len(errChan) > 0 {
 		log.Printf("Error fetching Contribution :", err)
-		c.JSON(http.StatusInternalServerError, types.GetUserRequestsResponse{
+		c.JSON(http.StatusInternalServerError, types.GetUserContributionsResponse{
 			Message:       "Error while getting Contribution Details",
 			Contributions: []types.FullContribution{},
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, types.GetUserRequestsResponse{
+	c.JSON(http.StatusOK, types.GetUserContributionsResponse{
 		Message:       "User request fetched successfully",
 		Contributions: contributions,
 	})
 }
 
-func getUserContributionData(c *gin.Context) {
+func getLeadUserRequests(c *gin.Context) {
+	userID := c.Param("id")
+
+	user, err := controllers.GetUserByID(userID)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusNotFound, types.GetLeadUserRequestsResponse{
+				Message:  "User Not Found with the given ID",
+				Requests: []types.FullContribution{},
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, types.GetLeadUserRequestsResponse{
+			Message:  "Error while fetching user data",
+			Requests: []types.FullContribution{},
+		})
+		return
+	}
+
+	if !user.IsLead {
+		c.JSON(http.StatusBadRequest, types.GetLeadUserRequestsResponse{
+			Message:  "User is NOT a Lead",
+			Requests: []types.FullContribution{},
+		})
+		return
+	}
 
 }

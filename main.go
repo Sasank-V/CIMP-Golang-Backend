@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/Sasank-V/CIMP-Golang-Backend/controllers"
@@ -15,7 +14,7 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error while loading env: ", err)
 	}
-	fmt.Printf("ENV Loaded\n")
+	log.Printf("ENV Loaded")
 
 	controllers.ConnectClubCollection()
 	controllers.ConnectDepartmentCollection()
