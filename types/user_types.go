@@ -16,3 +16,7 @@ type GetLeadUserRequestsResponse struct {
 	Message  string             `json:"message"`
 	Requests []FullContribution `json:"requests"`
 }
+
+type MakeUserLeadResponse struct {
+	Message string `json:"message"`
+}

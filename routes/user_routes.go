@@ -16,7 +16,7 @@ import (
 func SetupUserRoutes(r *gin.RouterGroup) {
 	r.GET("/info/:id", getUserInfo)
 	r.GET("/contributions/:id", getUserContributions)
-	r.GET("/requests/:id", getLeadUserRequests)
+	r.GET("/lead/requests/:id", getLeadUserRequests)
 }
 
 func getUserInfo(c *gin.Context) {
@@ -123,5 +123,19 @@ func getLeadUserRequests(c *gin.Context) {
 		})
 		return
 	}
+
+	requests, err := controllers.GetContributionsWithTarget(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, types.GetLeadUserRequestsResponse{
+			Message:  "Error getting requests , Try again later",
+			Requests: []types.FullContribution{},
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, types.GetLeadUserRequestsResponse{
+		Message:  "Lead user requests fetched successfully",
+		Requests: requests,
+	})
 
 }
