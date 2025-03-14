@@ -156,3 +156,21 @@ func GetContributionsWithTarget(id string) ([]types.FullContribution, error) {
 
 	return requests, nil
 }
+
+func AddContribution(cont schemas.Contribution) (string, error) {
+	ctx, cancel := database.GetContext()
+	defer cancel()
+
+	res, err := ContColl.InsertOne(ctx, cont)
+	if err != nil {
+		log.Printf("Error adding the Contribution: %v", err)
+		return "", err
+	}
+	var newCont schemas.Contribution
+	err = ContColl.FindOne(ctx, bson.D{{"_id", res.InsertedID}}).Decode(&newCont)
+	if err != nil {
+		log.Printf("Error fetching the newly added contribution: %v", err)
+		return "", err
+	}
+	return newCont.ID, nil
+}

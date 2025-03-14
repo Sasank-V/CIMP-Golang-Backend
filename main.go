@@ -23,9 +23,11 @@ func main() {
 
 	authApi := r.Group("/api/auth")
 	userApi := r.Group("/api/user")
+	contApi := r.Group("/api/contribution")
 
 	routes.SetupUserRoutes(userApi)
 	routes.SetupAuthRoutes(authApi)
+	routes.SetupContributionRoutes(contApi)
 
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal("Failed to start the server", err)
