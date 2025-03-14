@@ -18,16 +18,8 @@ func SetupAuthRoutes(r *gin.RouterGroup) {
 	r.POST("/login", loginHandler)
 }
 
-type UserSignUpInfo struct {
-	RegNumber string `json:"reg_number"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-}
-
 func signupHandler(c *gin.Context) {
-	var user UserSignUpInfo
+	var user types.UserSignUpInfo
 
 	if err := c.ShouldBindBodyWithJSON(&user); err != nil {
 		fmt.Printf("Error in signup: %v", err)
@@ -78,13 +70,8 @@ func signupHandler(c *gin.Context) {
 	})
 }
 
-type UserLoginInfo struct {
-	RegNumber string `json:"reg_number"`
-	Password  string `json:"password"`
-}
-
 func loginHandler(c *gin.Context) {
-	var login UserLoginInfo
+	var login types.UserLoginInfo
 
 	if jerr := c.ShouldBindBodyWithJSON(&login); jerr != nil {
 		fmt.Printf("Error logining in : %v", jerr)

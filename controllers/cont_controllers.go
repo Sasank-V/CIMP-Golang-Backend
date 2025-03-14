@@ -174,3 +174,54 @@ func AddContribution(cont schemas.Contribution) (string, error) {
 	}
 	return newCont.ID, nil
 }
+
+func UpdateContributionDetails(cont types.ContributionUpdateInfo) error {
+	ctx, cancel := database.GetContext()
+	defer cancel()
+
+	updateFields := bson.M{}
+	if cont.Title != nil {
+		updateFields["title"] = *cont.Title
+	}
+	if cont.Points != nil {
+		updateFields["points"] = *cont.Points
+	}
+	if cont.Description != nil {
+		updateFields["description"] = *cont.Description
+	}
+	if cont.ProofFiles != nil {
+		updateFields["proof_files"] = *cont.ProofFiles
+	}
+	if cont.Target != nil {
+		updateFields["target"] = *cont.Target
+	}
+	if cont.SecTargets != nil {
+		updateFields["secTargets"] = *cont.SecTargets
+	}
+	if cont.Department != nil {
+		updateFields["department"] = *cont.Department
+	}
+	if cont.ClubID != nil {
+		updateFields["club_id"] = *cont.ClubID
+	}
+
+	if len(updateFields) == 0 {
+		log.Print("No Fields given to update")
+		return fmt.Errorf("no fields given to update")
+	}
+
+	filter := bson.M{"id": cont.ContributionID}
+	update := bson.M{"$set": updateFields}
+
+	result, err := ContColl.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Printf("Error updating contribution: %v", err)
+		return fmt.Errorf("error updating contribution: %v", err)
+	}
+	if result.MatchedCount == 0 {
+		log.Printf("No Contribution found with the given ID")
+		return fmt.Errorf("no Contribution found with the given ID")
+	}
+
+	return nil
+}
