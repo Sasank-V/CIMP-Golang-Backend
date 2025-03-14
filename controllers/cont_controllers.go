@@ -9,6 +9,7 @@ import (
 	"github.com/Sasank-V/CIMP-Golang-Backend/database/schemas"
 	"github.com/Sasank-V/CIMP-Golang-Backend/lib"
 	"github.com/Sasank-V/CIMP-Golang-Backend/types"
+	"github.com/Sasank-V/CIMP-Golang-Backend/utils"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -223,5 +224,37 @@ func UpdateContributionDetails(cont types.ContributionUpdateInfo) error {
 		return fmt.Errorf("no Contribution found with the given ID")
 	}
 
+	return nil
+}
+
+func UpdateContributionStatus(contID string, status string) error {
+	ctx, cancel := database.GetContext()
+	defer cancel()
+
+	if !utils.IsValidStatus(status) {
+		log.Printf("Invalid Status given")
+		return fmt.Errorf("invalid status given")
+	}
+
+	updatedFeilds := bson.M{
+		"status": status,
+	}
+
+	filter := bson.M{
+		"id": contID,
+	}
+	update := bson.M{
+		"$set": updatedFeilds,
+	}
+
+	res, err := ContColl.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Printf("Error updating the status: %v", err)
+		return err
+	}
+	if res.ModifiedCount == 0 {
+		log.Printf("No Contribution found with the give ID")
+		return fmt.Errorf("no contribution found with the id")
+	}
 	return nil
 }

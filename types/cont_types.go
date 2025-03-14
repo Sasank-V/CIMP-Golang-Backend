@@ -33,10 +33,17 @@ type ContributionInfo struct {
 	Department  string   `json:"department"`
 }
 
+type ContributionStatusInfo struct {
+	ContributionID string `json:"cont_id"`
+	LeadUserID     string `json:"lead_user_id"`
+	Status         string `json:"status"`
+}
+
 type AddContributionResponse struct {
 	Message        string `json:"message"`
 	ContributionID string `json:"cont_id"`
 }
-type UpdateContributionDetailsResponse struct {
+
+type MessageResponse struct {
 	Message string `json:"message"`
 }
