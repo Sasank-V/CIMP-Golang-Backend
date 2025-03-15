@@ -4,9 +4,9 @@ import (
 	"log"
 	"sync"
 
+	"github.com/Sasank-V/CIMP-Golang-Backend/api/lib"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database/schemas"
-	"github.com/Sasank-V/CIMP-Golang-Backend/lib"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )

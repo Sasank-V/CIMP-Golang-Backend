@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Sasank-V/CIMP-Golang-Backend/types"
+	"github.com/Sasank-V/CIMP-Golang-Backend/api/types"
 	"github.com/golang-jwt/jwt/v5"
 )
 

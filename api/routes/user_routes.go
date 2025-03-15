@@ -6,8 +6,8 @@ import (
 	"sync"
 
 	"github.com/Sasank-V/CIMP-Golang-Backend/api/controllers"
+	"github.com/Sasank-V/CIMP-Golang-Backend/api/types"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database/schemas"
-	"github.com/Sasank-V/CIMP-Golang-Backend/types"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
