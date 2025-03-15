@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Sasank-V/CIMP-Golang-Backend/api/controllers"
+	"github.com/Sasank-V/CIMP-Golang-Backend/api/middlewares"
 	"github.com/Sasank-V/CIMP-Golang-Backend/api/types"
 	"github.com/Sasank-V/CIMP-Golang-Backend/api/utils"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database/schemas"
@@ -17,9 +18,10 @@ import (
 )
 
 func SetupContributionRoutes(r *gin.RouterGroup) {
+	r.Use(middlewares.VerifyValidTokenPresence())
 	r.POST("/add", addContribution)
 	r.PATCH("/update/details", updateContributionDetails)
-	r.PATCH("/update/status", updateContributionStatus)
+	r.PATCH("/update/status", middlewares.VerifyLeadUser(), updateContributionStatus)
 	r.PATCH("/add/id/user", addContributionToUser)
 }
 

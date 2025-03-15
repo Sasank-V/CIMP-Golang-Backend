@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/Sasank-V/CIMP-Golang-Backend/api/controllers"
+	"github.com/Sasank-V/CIMP-Golang-Backend/api/middlewares"
 	"github.com/Sasank-V/CIMP-Golang-Backend/api/types"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database/schemas"
 	"github.com/gin-gonic/gin"
@@ -16,8 +17,9 @@ var ClubColl *mongo.Collection
 var ClubConnect sync.Once
 
 func SetupClubRoutes(r *gin.RouterGroup) {
+	r.Use(middlewares.VerifyValidTokenPresence())
 	r.GET("/info/:id", getClubInfo)
-	r.GET("/info/all/members/:id", getAllClubMemebers)
+	r.GET("/info/all/members/:id", middlewares.VerifyLeadUser(), getAllClubMemebers)
 	r.GET("/info/all/departments/:id", getAllClubDepartments)
 }
 

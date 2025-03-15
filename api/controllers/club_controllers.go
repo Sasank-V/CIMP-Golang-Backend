@@ -4,9 +4,9 @@ import (
 	"log"
 	"sync"
 
-	"github.com/Sasank-V/CIMP-Golang-Backend/api/lib"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database/schemas"
+	"github.com/Sasank-V/CIMP-Golang-Backend/lib"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -31,6 +31,7 @@ func GetClubByID(id string) (schemas.Club, error) {
 	if err != nil {
 		log.Printf("error getting club data: %v", err)
 		return schemas.Club{}, err
+
 	}
 	return club, nil
 }

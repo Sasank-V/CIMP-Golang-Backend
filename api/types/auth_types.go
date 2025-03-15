@@ -1,5 +1,7 @@
 package types
 
+import "github.com/golang-jwt/jwt/v5"
+
 type UserSignUpInfo struct {
 	RegNumber string `json:"reg_number"`
 	FirstName string `json:"first_name"`
@@ -17,6 +19,13 @@ type TokenPayload struct {
 	ID     string `json:"id"`
 	Name   string `json:"name"`
 	IsLead bool   `json:"is_lead"`
+}
+
+type CustomClaims struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	IsLead bool   `json:"is_lead"`
+	jwt.RegisteredClaims
 }
 
 type AuthResponse struct {

@@ -98,6 +98,7 @@ func loginHandler(c *gin.Context) {
 	}
 
 	pass_hash := utils.HashSHA256(login.Password)
+	fmt.Printf("Pass Hash: %v\n", pass_hash)
 	if user.Password != pass_hash {
 		c.JSON(http.StatusBadRequest, types.AuthResponse{
 			Message: "Incorrect Password",

@@ -5,9 +5,10 @@ import (
 	"log"
 	"sync"
 
-	"github.com/Sasank-V/CIMP-Golang-Backend/api/lib"
+	"github.com/Sasank-V/CIMP-Golang-Backend/api/types"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database/schemas"
+	"github.com/Sasank-V/CIMP-Golang-Backend/lib"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -35,6 +36,8 @@ func UserExist(id string) bool {
 	return count > 0
 }
 
+//Get Functions
+
 func GetUserByID(id string) (schemas.User, error) {
 	ctx, cancel := database.GetContext()
 	defer cancel()
@@ -43,9 +46,6 @@ func GetUserByID(id string) (schemas.User, error) {
 	err := UserColl.FindOne(ctx, bson.D{{"id", id}}).Decode(&user)
 	if err != nil {
 		log.Printf("error fetching user data: %v", err)
-		if err == mongo.ErrNoDocuments {
-			return schemas.User{}, err
-		}
 		return schemas.User{}, err
 	}
 	return user, nil
@@ -73,6 +73,51 @@ func GetAllUserInClub(id string) ([]schemas.User, error) {
 	return members, nil
 }
 
+func GetAllUserContributions(id string) ([]types.FullContribution, error) {
+	user, err := GetUserByID(id)
+	if err != nil {
+		log.Printf("error fetching user Data: %v", err)
+		return []types.FullContribution{}, err
+	}
+
+	contChan := make(chan types.FullContribution, len(user.Contributions))
+	errChan := make(chan error, len(user.Contributions))
+	var wg sync.WaitGroup
+
+	for _, contID := range user.Contributions {
+		wg.Add(1)
+		go func(id string) {
+			defer wg.Done()
+			fullCont, err := GetContributionByID(id)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			contChan <- fullCont
+		}(contID)
+	}
+
+	go func() {
+		wg.Wait()
+		close(contChan)
+		close(errChan)
+	}()
+
+	var contributions []types.FullContribution
+	for cont := range contChan {
+		contributions = append(contributions, cont)
+	}
+
+	if len(errChan) > 0 {
+		err = <-errChan
+		log.Printf("Error fetching Contribution :", err)
+		return []types.FullContribution{}, err
+	}
+	return contributions, nil
+}
+
+//Add/Update Functions
+
 func AddUser(user schemas.User) error {
 	ctx, cancel := database.GetContext()
 	defer cancel()
@@ -87,16 +132,26 @@ func AddUser(user schemas.User) error {
 	return nil
 }
 
-func DeleteUser(user_id string) error {
+func AddContributionIDToUser(user_id string, cont_id string) error {
 	ctx, cancel := database.GetContext()
 	defer cancel()
-	res := UserColl.FindOneAndDelete(ctx, bson.D{{"id", user_id}})
-	if err := res.Err(); err != nil {
-		log.Printf("error deleting user: %v", err)
-		if err == mongo.ErrNoDocuments {
-			return fmt.Errorf("no User found with the given ID")
-		}
-		return fmt.Errorf("error deleting user: %w", err)
+
+	filter := bson.M{
+		"id": user_id,
+	}
+	update := bson.M{
+		"$push": bson.M{"contributions": cont_id},
+	}
+
+	res, err := UserColl.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Printf("Error adding contID to user Contributions: %v", err)
+		return err
+	}
+
+	if res.ModifiedCount == 0 {
+		log.Printf("No User found with the given ID")
+		return mongo.ErrNoDocuments
 	}
 	return nil
 }
@@ -135,26 +190,17 @@ func UpdateUserTotalPoints(userID string, points int) error {
 	return nil
 }
 
-func AddContributionIDToUser(user_id string, cont_id string) error {
+// Delete Functions
+func DeleteUser(user_id string) error {
 	ctx, cancel := database.GetContext()
 	defer cancel()
-
-	filter := bson.M{
-		"id": user_id,
-	}
-	update := bson.M{
-		"$push": bson.M{"contributions": cont_id},
-	}
-
-	res, err := UserColl.UpdateOne(ctx, filter, update)
-	if err != nil {
-		log.Printf("Error adding contID to user Contributions: %v", err)
-		return err
-	}
-
-	if res.ModifiedCount == 0 {
-		log.Printf("No User found with the given ID")
-		return mongo.ErrNoDocuments
+	res := UserColl.FindOneAndDelete(ctx, bson.D{{"id", user_id}})
+	if err := res.Err(); err != nil {
+		log.Printf("error deleting user: %v", err)
+		if err == mongo.ErrNoDocuments {
+			return fmt.Errorf("no User found with the given ID")
+		}
+		return fmt.Errorf("error deleting user: %w", err)
 	}
 	return nil
 }

@@ -1,11 +1,10 @@
 package routes
 
 import (
-	"log"
 	"net/http"
-	"sync"
 
 	"github.com/Sasank-V/CIMP-Golang-Backend/api/controllers"
+	"github.com/Sasank-V/CIMP-Golang-Backend/api/middlewares"
 	"github.com/Sasank-V/CIMP-Golang-Backend/api/types"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database/schemas"
 	"github.com/gin-gonic/gin"
@@ -14,9 +13,10 @@ import (
 
 // Route : /api/user
 func SetupUserRoutes(r *gin.RouterGroup) {
+	r.Use(middlewares.VerifyValidTokenPresence())
 	r.GET("/info/:id", getUserInfo)
 	r.GET("/contributions/:id", getUserContributions)
-	r.GET("/lead/requests/:id", getLeadUserRequests)
+	r.GET("/lead/requests/:id", middlewares.VerifyLeadUser(), getLeadUserRequests)
 }
 
 func getUserInfo(c *gin.Context) {
@@ -44,48 +44,18 @@ func getUserInfo(c *gin.Context) {
 
 func getUserContributions(c *gin.Context) {
 	userID := c.Param("id")
-	user, err := controllers.GetUserByID(userID)
+
+	contributions, err := controllers.GetAllUserContributions(userID)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			c.JSON(http.StatusNotFound, types.GetUserContributionsResponse{
-				Message:       "No User found with the given ID",
+				Message:       "No document found with either UserID or Contribution ID",
 				Contributions: []types.FullContribution{},
 			})
+			return
 		}
-	}
-
-	contChan := make(chan types.FullContribution, len(user.Contributions))
-	errChan := make(chan error, len(user.Contributions))
-	var wg sync.WaitGroup
-
-	for _, contID := range user.Contributions {
-		wg.Add(1)
-		go func(id string) {
-			defer wg.Done()
-			fullCont, err := controllers.GetContributionByID(id)
-			if err != nil {
-				errChan <- err
-				return
-			}
-			contChan <- fullCont
-		}(contID)
-	}
-
-	go func() {
-		wg.Wait()
-		close(contChan)
-		close(errChan)
-	}()
-
-	var contributions []types.FullContribution
-	for cont := range contChan {
-		contributions = append(contributions, cont)
-	}
-
-	if len(errChan) > 0 {
-		log.Printf("Error fetching Contribution :", err)
 		c.JSON(http.StatusInternalServerError, types.GetUserContributionsResponse{
-			Message:       "Error while getting Contribution Details",
+			Message:       "Error fetching user contribution",
 			Contributions: []types.FullContribution{},
 		})
 		return

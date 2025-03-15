@@ -4,9 +4,10 @@ import (
 	"log"
 	"sync"
 
-	"github.com/Sasank-V/CIMP-Golang-Backend/api/lib"
+	"github.com/Sasank-V/CIMP-Golang-Backend/api/types"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database/schemas"
+	"github.com/Sasank-V/CIMP-Golang-Backend/lib"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -55,4 +56,50 @@ func GetAllDepartmentsInClub(id string) ([]schemas.Department, error) {
 		return []schemas.Department{}, err
 	}
 	return departments, nil
+}
+
+func GetDepartmentLeadsByID(id string) ([]types.LeadsInfo, error) {
+	dept, err := GetDepartmentByID(id)
+	if err != nil {
+		log.Printf("error fetching dept Data: %v", err)
+		return []types.LeadsInfo{}, err
+	}
+
+	var leadChan = make(chan types.LeadsInfo)
+	var errChan = make(chan error)
+	var wg sync.WaitGroup
+
+	for _, leadUserID := range dept.Leads {
+		wg.Add(1)
+		go func(id string) {
+			defer wg.Done()
+			user, err := GetUserByID(id)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			leadChan <- types.LeadsInfo{
+				Name:   user.FirstName + " " + user.LastName,
+				UserID: user.ID,
+			}
+		}(leadUserID)
+	}
+
+	go func() {
+		wg.Wait()
+		close(leadChan)
+		close(errChan)
+	}()
+
+	var leadsData []types.LeadsInfo
+	for lead := range leadChan {
+		leadsData = append(leadsData, lead)
+	}
+
+	if len(errChan) > 0 {
+		err := <-errChan
+		log.Printf("error fetching lead user data: %v", err)
+		return []types.LeadsInfo{}, err
+	}
+	return leadsData, nil
 }
