@@ -221,7 +221,7 @@ func UpdateContributionDetails(cont types.ContributionUpdateInfo) error {
 	}
 	if result.MatchedCount == 0 {
 		log.Printf("No Contribution found with the given ID")
-		return fmt.Errorf("no Contribution found with the given ID")
+		return mongo.ErrNoDocuments
 	}
 
 	return nil
@@ -254,7 +254,7 @@ func UpdateContributionStatus(contID string, status string) error {
 	}
 	if res.ModifiedCount == 0 {
 		log.Printf("No Contribution found with the give ID")
-		return fmt.Errorf("no contribution found with the id")
+		return mongo.ErrNoDocuments
 	}
 	return nil
 }

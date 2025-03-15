@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Sasank-V/CIMP-Golang-Backend/controllers"
+	"github.com/Sasank-V/CIMP-Golang-Backend/api/controllers"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database/schemas"
 	"github.com/Sasank-V/CIMP-Golang-Backend/types"
 	"github.com/Sasank-V/CIMP-Golang-Backend/utils"
@@ -20,6 +20,7 @@ func SetupContributionRoutes(r *gin.RouterGroup) {
 	r.POST("/add", addContribution)
 	r.PATCH("/update/details", updateContributionDetails)
 	r.PATCH("/update/status", updateContributionStatus)
+	r.PATCH("/add/id/user", addContributionToUser)
 }
 
 func addContribution(c *gin.Context) {
@@ -65,6 +66,15 @@ func addContribution(c *gin.Context) {
 		})
 		return
 	}
+
+	err = controllers.AddContributionIDToUser(contInfo.UserID, newContID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, types.AddContributionResponse{
+			Message:        "Error adding cont ID to User , Send the ID to other endpoint just to push",
+			ContributionID: newContID,
+		})
+		return
+	}
 	c.JSON(http.StatusOK, types.AddContributionResponse{
 		Message:        "Contribution Added Successfully",
 		ContributionID: newContID,
@@ -106,6 +116,13 @@ func updateContributionDetails(c *gin.Context) {
 	if cont.Contribution.Status == schemas.Approved {
 		c.JSON(http.StatusBadRequest, types.MessageResponse{
 			Message: "User Contribution Already Approved",
+		})
+		return
+	}
+
+	if ContInfo.Points != nil && *ContInfo.Points < 0 {
+		c.JSON(http.StatusBadRequest, types.MessageResponse{
+			Message: "Points to be updated can't be negative",
 		})
 		return
 	}
@@ -195,19 +212,104 @@ func updateContributionStatus(c *gin.Context) {
 		return
 	}
 
-	err := controllers.UpdateContributionStatus(updateInfo.ContributionID, updateInfo.Status)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, types.MessageResponse{
-			Message: fmt.Sprintf("Error updating status: %v", err),
+	if cont.Contribution.Status == schemas.Status(updateInfo.Status) {
+		c.JSON(http.StatusBadRequest, types.MessageResponse{
+			Message: "Update Status is the same as the current status",
 		})
 		return
 	}
 
-	//Increase the total_points field for the user if pending -> approved
-	//Decrease the total_points field for the user if approved -> rejected
+	var prevStatus = cont.Contribution.Status
+	err := controllers.UpdateContributionStatus(updateInfo.ContributionID, updateInfo.Status)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusNotFound, types.MessageResponse{
+				Message: "No Contribution found to be updated",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, types.MessageResponse{
+			Message: "Error updating contribution status",
+		})
+		return
+	}
+
+	//Increase the total_points field for the user if pending/rejected -> approved
+	//Decrease the total_points field for the user if approved -> rejected/pending
+	//Do Nothing for rejected <-> pending
+	var updatePoints int = 0
+	if (prevStatus == schemas.Pending || prevStatus == schemas.Rejected) && updateInfo.Status == string(schemas.Approved) {
+		updatePoints = int(cont.Contribution.Points)
+	} else if prevStatus == schemas.Approved {
+		updatePoints = -int(cont.Contribution.Points)
+	}
+
+	if updatePoints > 0 {
+		err = controllers.UpdateUserTotalPoints(cont.Contribution.UserID, updatePoints)
+		if err != nil {
+			controllers.UpdateContributionStatus(updateInfo.ContributionID, string(prevStatus))
+			if err == mongo.ErrNoDocuments {
+				c.JSON(http.StatusNotFound, types.MessageResponse{
+					Message: "No User found to update the total_points",
+				})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, types.MessageResponse{
+				Message: "Error updating user total_points , Try Again",
+			})
+			return
+		}
+	}
 
 	c.JSON(http.StatusOK, types.MessageResponse{
 		Message: "Contribution Status Updated Successfully",
 	})
+}
 
+func addContributionToUser(c *gin.Context) {
+	var info types.AddContributionIDUserInfo
+	if err := c.ShouldBindBodyWithJSON(&info); err != nil {
+		c.JSON(http.StatusBadRequest, types.MessageResponse{
+			Message: "Error parsing JSON Body data",
+		})
+		return
+	}
+
+	user, err := controllers.GetUserByID(info.UserID)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusNotFound, types.MessageResponse{
+				Message: "No User found with the given ID",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, types.MessageResponse{
+			Message: "Error fetching the user details",
+		})
+		return
+	}
+
+	if slices.Contains(user.Contributions, info.ContributionID) {
+		c.JSON(http.StatusAccepted, types.MessageResponse{
+			Message: "Contribution ID Already Exist in the User Contributions",
+		})
+		return
+	}
+
+	err = controllers.AddContributionIDToUser(info.UserID, info.ContributionID)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusNotFound, types.MessageResponse{
+				Message: "No User found to add the contribution ID",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, types.MessageResponse{
+			Message: fmt.Sprintf("Error adding contID to user: %v", err),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, types.MessageResponse{
+		Message: "Contribution ID Added to User",
+	})
 }

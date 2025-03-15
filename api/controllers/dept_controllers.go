@@ -34,3 +34,25 @@ func GetDepartmentByID(id string) (schemas.Department, error) {
 	}
 	return dept, nil
 }
+
+func GetAllDepartmentsInClub(id string) ([]schemas.Department, error) {
+	ctx, cancel := database.GetContext()
+	defer cancel()
+
+	filter := bson.M{
+		"club_id": id,
+	}
+
+	cursor, err := DeptColl.Find(ctx, filter)
+	if err != nil {
+		log.Printf("Error getting departments in Club: %v", err)
+		return []schemas.Department{}, err
+	}
+
+	var departments []schemas.Department
+	if err = cursor.All(ctx, &departments); err != nil {
+		log.Printf("cursor error: %v", err)
+		return []schemas.Department{}, err
+	}
+	return departments, nil
+}

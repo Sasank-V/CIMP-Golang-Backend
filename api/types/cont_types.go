@@ -39,6 +39,11 @@ type ContributionStatusInfo struct {
 	Status         string `json:"status"`
 }
 
+type AddContributionIDUserInfo struct {
+	UserID         string `json:"user_id"`
+	ContributionID string `json:"cont_id"`
+}
+
 type AddContributionResponse struct {
 	Message        string `json:"message"`
 	ContributionID string `json:"cont_id"`
