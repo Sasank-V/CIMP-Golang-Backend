@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/Sasank-V/CIMP-Golang-Backend/api/types"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database"
@@ -188,6 +189,132 @@ func UpdateUserTotalPoints(userID string, points int) error {
 	}
 
 	return nil
+}
+
+//OTP and Pass Reset Functions
+
+func SetResetOTPToUser(user_id string, otp string) error {
+	ctx, cancel := database.GetContext()
+	defer cancel()
+
+	filter := bson.M{
+		"id": user_id,
+	}
+	update := bson.M{
+		"$set": bson.M{
+			"otp": otp,
+		},
+	}
+	res, err := UserColl.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Printf("Error setting up user OTP: %v", err)
+		return err
+	}
+	if res.ModifiedCount == 0 {
+		log.Printf("No User found to set OTP")
+		return mongo.ErrNoDocuments
+	}
+	return nil
+}
+
+func IncreaseUserOTPRetries(user_id string) error {
+	ctx, cancel := database.GetContext()
+	defer cancel()
+
+	filter := bson.M{
+		"id": user_id,
+	}
+	update := bson.M{
+		"$inc": bson.M{
+			"otp_retries": 1,
+		},
+	}
+	res, err := UserColl.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Printf("Error increasing the opt retry count: %v", err)
+		return err
+	}
+	if res.ModifiedCount == 0 {
+		log.Printf("No User found with the given ID")
+		return mongo.ErrNoDocuments
+	}
+	return nil
+}
+
+func LockUserAccountPasswordReset(user_id string, time time.Time) error {
+	ctx, cancel := database.GetContext()
+	defer cancel()
+
+	filter := bson.M{
+		"id": user_id,
+	}
+	update := bson.M{
+		"$set": bson.M{
+			"locked_till": time,
+		},
+	}
+
+	res, err := UserColl.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Printf("Error locking the account: %v", err)
+		return err
+	}
+	if res.ModifiedCount == 0 {
+		log.Printf("No User found to lock")
+		return mongo.ErrNoDocuments
+	}
+	return nil
+}
+
+func ResetOTPandLockValuesForUser(user_id string) error {
+	ctx, cancel := database.GetContext()
+	defer cancel()
+
+	filter := bson.M{
+		"id": user_id,
+	}
+	update := bson.M{
+		"$unset": bson.M{
+			"otp":         "",
+			"locked_till": nil,
+			"otp_retries": 0,
+		},
+	}
+	res, err := UserColl.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Printf("Error reseting the Values: %v", err)
+		return err
+	}
+	if res.ModifiedCount == 0 {
+		log.Printf("No user found with the ID to reset")
+		return mongo.ErrNoDocuments
+	}
+	return nil
+}
+
+func SetNewPasswordToUser(user_id string, pass string) error {
+	ctx, cancel := database.GetContext()
+	defer cancel()
+
+	filter := bson.M{
+		"id": user_id,
+	}
+	update := bson.M{
+		"$set": bson.M{
+			"password": pass,
+		},
+	}
+	res, err := UserColl.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Printf("Error setting up new password to user")
+		return err
+	}
+	if !res.Acknowledged {
+		log.Printf("No User was set the new Password: %v", res)
+		return mongo.ErrNoDocuments
+	}
+	return nil
+
 }
 
 // Delete Functions

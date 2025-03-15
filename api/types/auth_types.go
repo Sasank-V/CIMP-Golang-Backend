@@ -32,3 +32,9 @@ type AuthResponse struct {
 	Message string `json:"message"`
 	Token   string `json:"token"`
 }
+
+type SetNewPassInfo struct {
+	RegNo    string `json:"reg_no"`
+	OTP      string `json:"otp"`
+	Password string `json:"password"`
+}

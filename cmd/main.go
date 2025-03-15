@@ -5,6 +5,7 @@ import (
 
 	"github.com/Sasank-V/CIMP-Golang-Backend/api/controllers"
 	"github.com/Sasank-V/CIMP-Golang-Backend/api/routes"
+	"github.com/Sasank-V/CIMP-Golang-Backend/services"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -15,6 +16,8 @@ func main() {
 		log.Fatal("Error while loading env: ", err)
 	}
 	log.Printf("ENV Loaded")
+
+	services.SetUpEmailDialer()
 
 	controllers.ConnectClubCollection()
 	controllers.ConnectDepartmentCollection()

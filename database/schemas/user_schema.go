@@ -12,20 +12,21 @@ import (
 )
 
 type User struct {
-	ID              string    `bson:"id" json:"id"`
-	RegNumber       string    `bson:"reg_number" json:"reg_number"`
-	FirstName       string    `bson:"first_name" json:"first_name"`
-	LastName        string    `bson:"last_name" json:"last_name"`
-	Email           string    `bson:"email" json:"email"`
-	OTP             string    `bson:"otp,omitempty" json:"otp,omitempty"`
-	Password        string    `bson:"password" json:"password"`
-	IsLead          bool      `bson:"is_lead" json:"is_lead"`
-	Departments     []string  `bson:"departments,omitempty" json:"departments,omitempty"`
-	Clubs           []string  `bson:"clubs,omitempty" json:"clubs,omitempty"`
-	Contributions   []string  `bson:"contributions,omitempty" json:"contributions,omitempty"`
-	ResetAccessCode string    `bson:"reset_access_code,omitempty" json:"reset_access_code,omitempty"`
-	TotalPoints     int       `bson:"total_points" json:"total_points"`
-	LastUpdated     time.Time `bson:"last_updated" json:"last_updated"`
+	ID            string    `bson:"id" json:"id"`
+	RegNumber     string    `bson:"reg_number" json:"reg_number"`
+	FirstName     string    `bson:"first_name" json:"first_name"`
+	LastName      string    `bson:"last_name" json:"last_name"`
+	Email         string    `bson:"email" json:"email"`
+	OTP           string    `bson:"otp,omitempty" json:"otp,omitempty"`
+	OTPRetries    int       `bson:"otp_retries,omitempty" json:"otp_retries,omitempty"`
+	LockedTill    time.Time `bson:"locked_till,omitempty" json:"locked_till,omitempty"`
+	Password      string    `bson:"password" json:"password"`
+	IsLead        bool      `bson:"is_lead" json:"is_lead"`
+	Departments   []string  `bson:"departments,omitempty" json:"departments,omitempty"`
+	Clubs         []string  `bson:"clubs,omitempty" json:"clubs,omitempty"`
+	Contributions []string  `bson:"contributions,omitempty" json:"contributions,omitempty"`
+	TotalPoints   int       `bson:"total_points" json:"total_points"`
+	LastUpdated   time.Time `bson:"last_updated" json:"last_updated"`
 }
 
 func CreateUserCollection(db *mongo.Database) {
