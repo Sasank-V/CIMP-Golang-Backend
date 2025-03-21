@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Sasank-V/CIMP-Golang-Backend/api/controllers"
@@ -17,6 +18,8 @@ func SetupUserRoutes(r *gin.RouterGroup) {
 	r.GET("/info/:id", getUserInfo)
 	r.GET("/contributions/:id", getUserContributions)
 	r.GET("/lead/requests/:id", middlewares.VerifyLeadUser(), getLeadUserRequests)
+	// r.POST("/lead/sync/contests/", middlewares.VerifyLeadUser(), syncContestPoints)
+	r.POST("/lead/upload/handles", middlewares.VerifyLeadUser(), uploadClubMemebersHandles)
 }
 
 func getUserInfo(c *gin.Context) {
@@ -109,3 +112,46 @@ func getLeadUserRequests(c *gin.Context) {
 	})
 
 }
+
+func uploadClubMemebersHandles(c *gin.Context) {
+	var HandlesInfo types.UploadMembersHandlesInfo
+	if err := c.ShouldBind(&HandlesInfo); err != nil {
+		c.JSON(http.StatusBadRequest, types.MessageResponse{
+			Message: fmt.Sprintf("Error parsing the JSON body: %v", err),
+		})
+		return
+	}
+	file, err := c.FormFile("csv_file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, types.MessageResponse{
+			Message: "Failed to get the CSV File",
+		})
+		return
+	}
+	err = controllers.UploadMemberHandles(file, HandlesInfo.LeadUserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, types.MessageResponse{
+			Message: "Error uploading user handles",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, types.MessageResponse{
+		Message: "Member handles Uploaded Successfully",
+	})
+}
+
+// func syncContestPoints(c *gin.Context) {
+// 	var info types.SyncContestPointsInfo
+// 	if err := c.ShouldBindBodyWithJSON(&info); err != nil {
+// 		c.JSON(http.StatusOK, types.MessageResponse{
+// 			Message: fmt.Sprintf("Error parsing JSON Body: %v", err),
+// 		})
+// 		return
+// 	}
+// 	//Get All the Users from the Club
+// 	// For every user Check the Last Contest Contribution Update If found else take the startDate given in the body
+// 	// Take the Range from the Last Contest Contribution Created Date to Date.Now()
+// 	// Fetch all the contests and Sum up the Points
+// 	//Create a New Contribution with the Template
+// 	//Add and Approve it
+// }

@@ -1,12 +1,16 @@
 package controllers
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
+	"mime/multipart"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/Sasank-V/CIMP-Golang-Backend/api/types"
+	"github.com/Sasank-V/CIMP-Golang-Backend/api/utils"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database"
 	"github.com/Sasank-V/CIMP-Golang-Backend/database/schemas"
 	"github.com/Sasank-V/CIMP-Golang-Backend/lib"
@@ -157,6 +161,36 @@ func AddContributionIDToUser(user_id string, cont_id string) error {
 	return nil
 }
 
+func SetUserHandles(user_id string, handles []string) error {
+	ctx, cancel := database.GetContext()
+	defer cancel()
+
+	filter := bson.M{
+		"id": user_id,
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"handles": handles,
+		},
+	}
+
+	res, err := UserColl.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Printf("Error adding handle to user: %v", err)
+		return err
+	}
+	if res.MatchedCount == 0 {
+		log.Printf("No user found with the given user ID")
+		return mongo.ErrNoDocuments
+	}
+	if res.ModifiedCount == 0 {
+		log.Printf("No Change in the User Handle")
+		return nil
+	}
+	return nil
+}
+
 func UpdateUserTotalPoints(userID string, points int) error {
 	ctx, cancel := database.GetContext()
 	defer cancel()
@@ -190,6 +224,78 @@ func UpdateUserTotalPoints(userID string, points int) error {
 
 	return nil
 }
+
+func UploadMemberHandles(file *multipart.FileHeader, lead_user_id string) error {
+	src, err := file.Open()
+	if err != nil {
+		log.Printf("Error opening file: %v", err)
+		return err
+	}
+	defer src.Close()
+
+	reader := csv.NewReader(src)
+	records, err := reader.ReadAll()
+	if err != nil {
+		log.Printf("Error reading records from the file: %v", err)
+		return err
+	}
+
+	var errChan = make(chan error, len(records))
+	var wg sync.WaitGroup
+
+	for i, row := range records {
+		if i == 0 {
+			continue
+		}
+		user := types.CSVUserData{
+			// Dept:       strings.TrimSpace(row[0]),
+			RollNo: strings.TrimSpace(row[1]),
+			// Name:       strings.TrimSpace(row[2]),
+			CodeChef:   strings.TrimSpace(row[3]),
+			CodeForces: strings.TrimSpace(row[4]),
+			LeetCode:   strings.TrimSpace(row[5]),
+		}
+		var handles []string
+		if user.CodeChef != "" {
+			handles = append(handles, user.CodeChef)
+		}
+		if user.CodeForces != "" {
+			handles = append(handles, user.CodeForces)
+		}
+		if user.LeetCode != "" {
+			handles = append(handles, user.LeetCode)
+		}
+		wg.Add(1)
+		userID := utils.GetUserIDFromRegNumber(user.RollNo)
+		go func(id string, handles []string) {
+			defer wg.Done()
+			if UserExist(id) {
+				log.Printf("User: %v", id)
+				err := SetUserHandles(id, handles)
+				if err != nil {
+					errChan <- err
+				}
+			}
+		}(userID, handles)
+	}
+	go func() {
+		wg.Wait()
+		close(errChan)
+	}()
+
+	var finalErr error
+	for err := range errChan {
+		if err != nil {
+			finalErr = err
+			break
+		}
+	}
+	return finalErr
+}
+
+// func AllUserContestPoints(lead_user_id string) error {
+// 	return nil
+// }
 
 //OTP and Pass Reset Functions
 
@@ -318,6 +424,7 @@ func SetNewPasswordToUser(user_id string, pass string) error {
 }
 
 // Delete Functions
+
 func DeleteUser(user_id string) error {
 	ctx, cancel := database.GetContext()
 	defer cancel()

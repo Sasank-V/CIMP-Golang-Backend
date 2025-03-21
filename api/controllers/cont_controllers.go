@@ -25,6 +25,8 @@ func ConnectContributionCollection() {
 	})
 }
 
+// Get Functions
+
 func GetContributionByID(id string) (types.FullContribution, error) {
 	ctx, cancel := database.GetContext()
 	defer cancel()
@@ -158,6 +160,8 @@ func GetContributionsWithTarget(id string) ([]types.FullContribution, error) {
 	return requests, nil
 }
 
+//Add/Update Functions
+
 func AddContribution(cont schemas.Contribution) (string, error) {
 	ctx, cancel := database.GetContext()
 	defer cancel()
@@ -258,3 +262,5 @@ func UpdateContributionStatus(contID string, status string) error {
 	}
 	return nil
 }
+
+//Delete Functions

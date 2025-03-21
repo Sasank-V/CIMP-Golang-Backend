@@ -22,6 +22,8 @@ func ConnectClubCollection() {
 	})
 }
 
+// Get Functions
+
 func GetClubByID(id string) (schemas.Club, error) {
 	ctx, cancel := database.GetContext()
 	defer cancel()

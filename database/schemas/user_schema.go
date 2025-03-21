@@ -19,12 +19,13 @@ type User struct {
 	Email         string    `bson:"email" json:"email"`
 	OTP           string    `bson:"otp,omitempty" json:"otp,omitempty"`
 	OTPRetries    int       `bson:"otp_retries,omitempty" json:"otp_retries,omitempty"`
-	LockedTill    time.Time `bson:"locked_till,omitempty" json:"locked_till,omitempty"`
+	LockedTill    time.Time `bson:"locked_till" json:"locked_till"`
 	Password      string    `bson:"password" json:"password"`
 	IsLead        bool      `bson:"is_lead" json:"is_lead"`
 	Departments   []string  `bson:"departments,omitempty" json:"departments,omitempty"`
 	Clubs         []string  `bson:"clubs,omitempty" json:"clubs,omitempty"`
 	Contributions []string  `bson:"contributions,omitempty" json:"contributions,omitempty"`
+	Handles       []string  `bson:"handles,omitempty" json:"handles,omitempty"`
 	TotalPoints   int       `bson:"total_points" json:"total_points"`
 	LastUpdated   time.Time `bson:"last_updated" json:"last_updated"`
 }
@@ -62,6 +63,15 @@ func CreateUserCollection(db *mongo.Database) {
 			"email": bson.M{
 				"bsonType": "string",
 			},
+			"otp": bson.M{
+				"bsonType": "string",
+			},
+			"otp_retries": bson.M{
+				"bsonType": "string",
+			},
+			"locked_till": bson.M{
+				"bsonType": "date",
+			},
 			"password": bson.M{
 				"bsonType": "string",
 			},
@@ -85,6 +95,18 @@ func CreateUserCollection(db *mongo.Database) {
 				"items": bson.M{
 					"bsonType": "string",
 				},
+			},
+			"handles": bson.M{
+				"bsonType": "array",
+				"items": bson.M{
+					"bsonType": "string",
+				},
+			},
+			"total_points": bson.M{
+				"bsonType": "int",
+			},
+			"last_updated": bson.M{
+				"bsonType": "date",
 			},
 		},
 	}
