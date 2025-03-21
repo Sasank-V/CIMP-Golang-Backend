@@ -18,8 +18,8 @@ func SetupUserRoutes(r *gin.RouterGroup) {
 	r.GET("/info/:id", getUserInfo)
 	r.GET("/contributions/:id", getUserContributions)
 	r.GET("/lead/requests/:id", middlewares.VerifyLeadUser(), getLeadUserRequests)
-	// r.POST("/lead/sync/contests/", middlewares.VerifyLeadUser(), syncContestPoints)
 	r.POST("/lead/upload/handles", middlewares.VerifyLeadUser(), uploadClubMemebersHandles)
+	// r.POST("/lead/sync/contests/", middlewares.VerifyLeadUser(), syncContestPoints)
 }
 
 func getUserInfo(c *gin.Context) {
@@ -141,13 +141,6 @@ func uploadClubMemebersHandles(c *gin.Context) {
 }
 
 // func syncContestPoints(c *gin.Context) {
-// 	var info types.SyncContestPointsInfo
-// 	if err := c.ShouldBindBodyWithJSON(&info); err != nil {
-// 		c.JSON(http.StatusOK, types.MessageResponse{
-// 			Message: fmt.Sprintf("Error parsing JSON Body: %v", err),
-// 		})
-// 		return
-// 	}
 // 	//Get All the Users from the Club
 // 	// For every user Check the Last Contest Contribution Update If found else take the startDate given in the body
 // 	// Take the Range from the Last Contest Contribution Created Date to Date.Now()

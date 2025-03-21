@@ -293,10 +293,6 @@ func UploadMemberHandles(file *multipart.FileHeader, lead_user_id string) error 
 	return finalErr
 }
 
-// func AllUserContestPoints(lead_user_id string) error {
-// 	return nil
-// }
-
 //OTP and Pass Reset Functions
 
 func SetResetOTPToUser(user_id string, otp string) error {

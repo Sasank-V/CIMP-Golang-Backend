@@ -30,11 +30,6 @@ type UploadMembersHandlesInfo struct {
 	CSVFile    *multipart.FileHeader `form:"csv_file" binding:"required"`
 }
 
-// type SyncContestPointsInfo struct {
-// 	LeadUserID string    `json:"lead_user_id"`
-// 	StartDate  time.Time `json:"start_date:"`
-// }
-
 type CSVUserData struct {
 	Dept       string
 	RollNo     string
