@@ -25,13 +25,13 @@ type Contribution struct {
 	Points      uint      `bson:"points" json:"points"`
 	UserID      string    `bson:"user_id" json:"user_id"`
 	Description string    `bson:"description" json:"description"`
-	ProofFiles  []string  `bson:"proof_files,omitempty" json:"proof_files,omitempty"`
+	ProofFiles  []string  `bson:"proof_files,omitempty" json:"proof_files"`
 	Target      string    `bson:"target" json:"target"`
-	SecTargets  []string  `bson:"secTargets,omitempty" json:"secTargets,omitempty"`
+	SecTargets  []string  `bson:"secTargets,omitempty" json:"secTargets"`
 	ClubID      string    `bson:"club_id" json:"club_id"`
 	Department  string    `bson:"department" json:"department"`
 	Status      Status    `bson:"status" json:"status"`
-	Reason      string    `bson:"reason,omitempty" json:"reason,omitempty"`
+	Reason      string    `bson:"reason,omitempty" json:"reason"`
 	CreatedAt   time.Time `bson:"created_at" json:"created_at"`
 }
 

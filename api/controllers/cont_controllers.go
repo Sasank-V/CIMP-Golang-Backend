@@ -231,7 +231,7 @@ func UpdateContributionDetails(cont types.ContributionUpdateInfo) error {
 	return nil
 }
 
-func UpdateContributionStatus(contID string, status string) error {
+func UpdateContributionStatus(contID string, status string, reason string) error {
 	ctx, cancel := database.GetContext()
 	defer cancel()
 
@@ -242,6 +242,7 @@ func UpdateContributionStatus(contID string, status string) error {
 
 	updatedFeilds := bson.M{
 		"status": status,
+		"reason": reason,
 	}
 
 	filter := bson.M{
