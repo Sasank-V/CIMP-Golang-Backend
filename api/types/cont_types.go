@@ -28,7 +28,7 @@ type ContributionInfo struct {
 	Description string   `json:"description"`
 	ProofFiles  []string `json:"proof_files,omitempty"`
 	Target      string   `json:"target"`
-	SecTargets  []string `json:"secTargets,omitempty"`
+	SecTargets  []string `json:"sec_targets,omitempty"`
 	ClubID      string   `json:"club_id"`
 	Department  string   `json:"department"`
 }
@@ -37,6 +37,7 @@ type ContributionStatusInfo struct {
 	ContributionID string `json:"cont_id"`
 	LeadUserID     string `json:"lead_user_id"`
 	Status         string `json:"status"`
+	Reason         string `json:"reason"`
 }
 
 type AddContributionIDUserInfo struct {

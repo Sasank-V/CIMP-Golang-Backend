@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Sasank-V/CIMP-Golang-Backend/lib"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -19,8 +18,6 @@ var (
 	DBClient   *mongo.Client
 	clientOnce sync.Once
 )
-
-var User *mongo.Collection
 
 func InitDB() *mongo.Database {
 	connectDB()
@@ -80,7 +77,7 @@ func CollectionExists(db *mongo.Database, collName string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if slices.Contains(collections, lib.ContributionCollName) {
+	if slices.Contains(collections, collName) {
 		return true, nil
 	}
 	return false, nil

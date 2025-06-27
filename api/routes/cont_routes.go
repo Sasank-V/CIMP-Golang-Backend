@@ -222,7 +222,7 @@ func updateContributionStatus(c *gin.Context) {
 	}
 
 	var prevStatus = cont.Contribution.Status
-	err := controllers.UpdateContributionStatus(updateInfo.ContributionID, updateInfo.Status)
+	err := controllers.UpdateContributionStatus(updateInfo.ContributionID, updateInfo.Status, updateInfo.Reason)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			c.JSON(http.StatusNotFound, types.MessageResponse{
@@ -249,7 +249,7 @@ func updateContributionStatus(c *gin.Context) {
 	if updatePoints > 0 {
 		err = controllers.UpdateUserTotalPoints(cont.Contribution.UserID, updatePoints)
 		if err != nil {
-			controllers.UpdateContributionStatus(updateInfo.ContributionID, string(prevStatus))
+			controllers.UpdateContributionStatus(updateInfo.ContributionID, string(prevStatus), updateInfo.Reason)
 			if err == mongo.ErrNoDocuments {
 				c.JSON(http.StatusNotFound, types.MessageResponse{
 					Message: "No User found to update the total_points",
